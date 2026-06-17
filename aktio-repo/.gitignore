@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+
+# Temporaire
+*.tmp
+*.bak
+~$*
+
+# Dépendances (si un jour tu ajoutes des scripts)
+node_modules/
+__pycache__/
