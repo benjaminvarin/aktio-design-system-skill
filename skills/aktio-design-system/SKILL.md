@@ -12,6 +12,13 @@ Reference for generating Aktio product UI in Figma via the MCP `use_figma` / `se
 - **Library key:** `lk-6ddc3941d4bbe8ebd76a8bcbab4e86558c64adabf1ea1d3ff9bc747d56a5fddb81e17ec4f52d498b4bfd06003d232906dd218556145db85d72fb431c4d49f8ad`
 - **Type face:** `Inter` (only). Note Figma style names use a space: `Semi Bold`, `Extra Bold` — never `SemiBold`.
 
+## Prerequisite — enable the library in the target file
+
+Before generating anything, the **`Aktio - Design System (C14)` library must be enabled in the target Figma file** (Assets panel → library icon → toggle it on). This makes its components **and its variables/tokens** available locally.
+
+- **Tell the user up front.** Whenever asked to create mockups or use this design system, first remind them: *"Make sure the `Aktio - Design System (C14)` library is added/enabled in this file, otherwise tokens and components may be missing."*
+- **The agent should verify, not assume.** Run `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()` early. If it returns empty, the variable library is likely not enabled — surface this to the user instead of silently working around it. (A fallback exists — harvesting token IDs from imported components' bindings, see workflow step 4 — but it's a workaround, not a substitute for enabling the library.)
+
 ## Golden rules
 
 1. **Never hardcode a value that exists as a variable.** Bind fills, strokes, spacing, radius, and effects to the variables below. Use `setBoundVariable` / `setRangeBoundVariableForPaint` rather than raw hex/numbers.
@@ -21,6 +28,16 @@ Reference for generating Aktio product UI in Figma via the MCP `use_figma` / `se
 5. **Search queries must be short.** One or two words ("chip", "drawer", "table"). Long multi-word queries return empty.
 6. **Use literal property names.** Variant values are **PascalCase** (`Filled`, `Enabled`, `Danger`) — not lowercase, despite what library descriptions suggest. Content properties carry a `#id` suffix (e.g. `Label#4736:2`, `Title#3933:0`). Pass these exact strings to `setProperties`; a reformatted name silently no-ops. Exception: `Toggle` uses lowercase variant values (`selected`, `unselected`).
 7. **Overlay hierarchy.** Pick the least intrusive surface that fits: toaster (transient confirmation) < information message (inline, persistent) < drawer (edit one item, keeps context) < modal (blocking decision). Never use a modal for routine feedback.
+
+## Layout rules (always apply)
+
+These are mandatory whenever producing a screen — they are the difference between "technically valid" and "DS-conform":
+
+1. **Card radius = 24px (`rounded/6`).** Every card / block uses 24px corners. Never 8px.
+2. **Spacing rhythm:** 16px (`spacing/4`) between elements and between/inside cards · **8px (`spacing/2`)** in the tighter case of a title followed by its paragraph. Don't invent intermediate values.
+3. **Main container padding = 40px (`spacing/10`)** all around — the content region holding the page's cards/sections (e.g. the "Réduire mes émissions" area). Not 32px, not 56px.
+4. **Navigation is two stacked bars:** `Header nav bar` (`d0569e659a4d55ea9ae0f533b59dbdb75829c1ee`) **on top of** `Top nav bar` (`10012a780047d4cfb289f0c388cb1ea16dea6112`). Always place both; the header bar is not optional.
+5. **Use the real `drawer` component** (`71f17e78ee18b1316ed9829f09f2acb9cf169180`) for any side panel — never hand-build a frame that imitates it. Same for any component that exists in the DS.
 
 ## Tokens
 
@@ -80,7 +97,7 @@ Base-4 scale, token group `spacing/*`: `0,5`=2, `1`=4, `1,5`=6, `2`=8, `4`=16, `
 
 ### Radius
 
-Token group `rounded/*`: `1`=4, `2`=8 (default for inputs, buttons, cards), `4`=16, `6`=24, `full`=9999 (pills, chips, avatars). `Radius/radius-s`=8 is the alias.
+Token group `rounded/*`: `1`=4, `2`=8 (inputs, buttons), `4`=16, `6`=**24 (all cards / blocks)**, `full`=9999 (pills, chips, avatars). `Radius/radius-s`=8 is the alias. **Cards always use `rounded/6` (24px)** — not `rounded/2`.
 
 ### Icon sizes
 
@@ -198,8 +215,9 @@ Each guide lists the real variant/content properties (extracted from the source 
 ### `[New] chips` — set · `3039d84d4058febd1e51d9b2fd93158e95858e98`
 - **Variants:** `Style` = Default | Neutral | Success | Warning | Danger · `States` = Enabled | Hovered | Pressed | Selected | Disabled · `Size` = SM | S | XS
 - **Content:** `Label#3255:6`, `With text#3266:0`, `With icon left#3255:9` + `Icon left#3255:7` (swap), `With icon right#3255:5` + `Icon right#3255:8` (swap)
+- **⚠️ Icons default to ON:** `With icon left` and `With icon right` are **`true` by default** (left = remove ×, right = chevron). For a plain category/label chip, set **both to `false`** or you'll get parasitic icons: `setProperties({ "With icon left#3255:9":false, "With icon right#3255:5":false })`.
 - **When:** filters, multi-selections, input units, third level action · semantic colour reflects meaning (Success/Warning/Danger = status, not decoration) · `Selected` for the active filter state.
-- **Pose:** `setProperties({ Style:"Default", States:"Enabled", Size:"SM" })`
+- **Pose:** `setProperties({ Style:"Default", States:"Enabled", Size:"SM", "With icon left#3255:9":false, "With icon right#3255:5":false })`
 
 ### `Toggle` — set · `797a4191277c0e1bb1f3ef5b4d7283fd803cc43f`
 - **Variants:** `States` = selected | unselected (+ hover/pressed/disabled of each). ⚠️ **lowercase** — exception to the PascalCase rule.
@@ -238,8 +256,9 @@ Each guide lists the real variant/content properties (extracted from the source 
 - **When:** transient bottom-right (24px margin left and bottom) feedback after an action (save succeeded…) · auto-dismisses · never for info that must stay visible (→ Information message).
 
 ### Navigation
-- `Top nav bar` — component · `10012a780047d4cfb289f0c388cb1ea16dea6112` · prop `Page Title#7028:0` · embeds `Tab Bar` + chips + breadcrumb chevrons. Top of every app screen.
-- `Header nav bar` — component · `d0569e659a4d55ea9ae0f533b59dbdb75829c1ee`.
+- **Two stacked bars, always both:** `Header nav bar` (`d0569e659a4d55ea9ae0f533b59dbdb75829c1ee`) sits **on top of** `Top nav bar` (`10012a780047d4cfb289f0c388cb1ea16dea6112`). The header bar is not optional.
+- `Top nav bar` — component · `10012a780047d4cfb289f0c388cb1ea16dea6112` · prop `Page Title#7028:0` · embeds `Tab Bar` + chips + breadcrumb chevrons. Below the header bar, on every app screen.
+- `Header nav bar` — component · `d0569e659a4d55ea9ae0f533b59dbdb75829c1ee` · global bar (logo, language, account) above the top nav bar.
 - `Tab Bar` — component · `2133c9f142324f7369e5f1458398c269d67d73e3` · items `.tab bar - item` (`b9cb6e…`). ⚠️ Navigate between sections of one page.
 - `Heading navigation` — set · `12d978d80a1d2b0019f49be3eb7dff516994bdaf`.
 
@@ -251,7 +270,8 @@ Each guide lists the real variant/content properties (extracted from the source 
 ### `block` — component · `761dcb078e419340fd4244dbf454a72617efeb0d`
 - **Props:** `Content#8553:1` (SLOT). Child of the **Card** family (`🧩 Card` page).
 - **When:** the base content container — essentially a card. **One block per topic/theme.** E.g. a drawer offering duration / address / user options is composed of 3 blocks (Durée / Adresse / Utilisateur).
-- **Spacing:** vertical gap **16px** (`spacing/4`) between blocks and inside a block.
+- **Radius:** **24px** (`rounded/6`) — like all cards.
+- **Spacing:** vertical gap **16px** (`spacing/4`) between blocks and inside a block; **8px** (`spacing/2`) between a title and its paragraph.
 
 ### `Stacked-List` — skeleton, not a single component
 - **Skeleton:** there is no published `Stacked-List` container — assemble it by hand: stack several `Stacked-list-item` (`2c25b663123bdc711521c0cdd3b192675e302067`) in an auto-layout frame, spaced **8px** (`spacing/2`) apart. Same approach as the table system.
@@ -273,6 +293,7 @@ Each guide lists the real variant/content properties (extracted from the source 
 
 ## Recommended workflow for `use_figma`
 
+0. **Check the library is enabled.** Call `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()`. If empty, warn the user that `Aktio - Design System (C14)` may not be added to the file (tokens/components could be missing) before proceeding.
 1. **Resolve the component** — `search_design_system(fileKey, query, includeLibraryKeys: [<active key>])` with a 1-word query. Confirm `libraryName === "Aktio - Design System (C14)"`.
 2. **Import** — `const set = await figma.importComponentSetByKeyAsync(key)` (or `importComponentByKeyAsync`). For sets, `set.defaultVariant` or find the variant via `componentPropertyDefinitions`.
 3. **Instantiate** — `const inst = component.createInstance()`; set variant props with `inst.setProperties({...})`.
@@ -282,18 +303,36 @@ Each guide lists the real variant/content properties (extracted from the source 
    node.componentPropertyDefinitions; // { "Style": {type:"VARIANT", variantOptions:[...]}, "Label#…": {type:"TEXT"}, ... }
    ```
    (`get_context_for_code_connect` requires a Figma Developer seat and is unavailable here — use `componentPropertyDefinitions` instead.)
-4. **Bind tokens, don't hardcode** — load variables by collection and bind:
+4. **Bind tokens, don't hardcode.** ⚠️ In a working/exploration file the DS variables are usually **not local**: `getLocalVariablesAsync()` and `teamLibrary.getAvailableLibraryVariableCollectionsAsync()` return empty. The reliable way to get token IDs by name is to **harvest them from an imported component's bindings**:
    ```js
-   const vars = await figma.variables.getLocalVariablesAsync();
-   const purple500 = vars.find(v => v.name === "purple/500");
-   node.setBoundVariable("fills", purple500); // or setRangeBoundVariableForPaint
+   // Instantiate any DS component, read its boundVariables, map name -> id
+   const harvested = {}; // { "purple/500": "VariableID:...", ... }
+   async function harvest(inst){
+     for (const n of [...inst.findAll(()=>true), inst]) {
+       const bv = n.boundVariables || {};
+       for (const k of ["fills","strokes"]) if (Array.isArray(bv[k])) for (const b of bv[k]) {
+         const v = await figma.variables.getVariableByIdAsync(b.id); if (v) harvested[v.name] = v.id;
+       }
+       for (const k of ["topLeftRadius","itemSpacing","paddingLeft"]) if (bv[k]) {
+         const v = await figma.variables.getVariableByIdAsync(bv[k].id); if (v) harvested[v.name] = v.id;
+       }
+     }
+   }
+   // Instantiate several variants (e.g. all chip styles) to harvest a wide palette, then:
+   const v = await figma.variables.getVariableByIdAsync(harvested["purple/500"]);
+   node.fills = [figma.variables.setBoundVariableForPaint(figma.util.solidPaint("#fff"), "color", v)];
+   node.setBoundVariable("topLeftRadius", await figma.variables.getVariableByIdAsync(harvested["rounded/6"]));
    ```
-   Same approach for `itemSpacing`/`padding…` (spacing tokens), `cornerRadius` (rounded tokens), and effects.
+   Harvest from varied components (chips of each Style, buttons, block) to cover more tokens. Same approach for `itemSpacing`/`padding…`, `cornerRadius`, effects.
 5. **Auto-layout** — set `layoutMode`, and use `layoutSizingHorizontal/Vertical` = `"FILL"` / `"HUG"` / `"FIXED"` rather than manual width math. Use spacing tokens for `itemSpacing` and padding.
 6. **Type** — load fonts before setting text: `await figma.loadFontAsync({family:"Inter", style:"Semi Bold"})`. Map sizes/line-heights to the typography tokens above.
 
-## Common pitfalls (carried over from prior sessions)
+## Common pitfalls (carried over from prior sessions + live tests)
 
+- **Tokens not local:** see workflow step 4 — harvest token IDs from imported components' bindings; don't rely on `getLocalVariablesAsync` in a non-DS file.
+- **Append before FILL:** `layoutSizingHorizontal = "FILL"` throws / no-ops unless the node is **already a child** of an auto-layout parent. Order is: create → `appendChild` → set sizing. Never set FILL before appending.
+- **Nested-component props (nav, tabs):** setting a parent prop like `Page Title#…` does **not** configure embedded instances (Tab Bar items, etc.). The default content ("Item 1-6", "Mes bilans") persists. To change them, reach the nested instance/text node directly and override it — the parent's `componentProperties` only exposes a subset.
+- **Chips icons default ON:** `With icon left/right` are `true` by default → stray × and chevron. Disable both for plain label chips (see chips guide).
 - **Recursive traversal:** to restyle nested instance content, walk `findAllWithCriteria` / recurse `children`; overrides on instance descendants need the descendant node, not the instance root.
 - **Component instance styling:** exposed nested props appear in the instance's `componentProperties`; deeper overrides require reaching the child node directly (instances allow per-node fill/text overrides but not structural changes).
 - **Layout sizing:** `layoutSizingHorizontal = "FILL"` only works when the parent has `layoutMode` set; otherwise it silently no-ops — set the parent's auto-layout first.
