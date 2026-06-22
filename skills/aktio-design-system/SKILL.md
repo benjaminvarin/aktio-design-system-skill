@@ -237,8 +237,15 @@ Don't use the figured `table` instance (renders broken). Build a **vertical skel
 
 **Selection & top control bar:** `[NEW] top control bar` (`c3a406…`) is shown **only when one or more rows are selected**, and it **replaces the header row** for that state. Selection is only possible if row checkboxes are shown — so: checkboxes off → no selection → header row stays; checkboxes on + selection → header row swapped for the top control bar.
 
-**Inside a `Table Row` (cells are in a fixed, NON-reorderable order — they live in an instance):**
-`table cell - checkbox` (always first; hide it if no batch action on the page) → then content cells in their native order: `table cell - element` (for a control: Select, button, chips…) and `table cell text` / `table cell - text small` (for text) → `action-rail` (always last; hidden by default, appears on row hover at the right-hand 8px margin, holds the row's quick actions: edit, duplicate, delete…). You cannot move cells (`insertChild` fails inside an instance) — map your columns to the native order, name the header titles to match.
+**Cell order is fixed but cell TYPE is swappable.** Cells live inside the instance, so you cannot reorder them (`insertChild` throws). But you **can change the type of each position** with `swapComponent` — this is how you control which column shows what. Native positions: `[0]` checkbox → `[1]`–`[6]` content → `[last]` action-rail. To build "name | role | actions": take positions 1/2/3, swap position 1 → `cell text` (name), position 2 → `cell - element` (Select), position 3 → `cell - element` (action), hide the rest. Always produce **as many visible cells as the header has columns**, with matching widths (e.g. name `FILL`, others fixed 192) — a missing cell pushes everything right and misaligns columns.
+```js
+const cellText = await figma.importComponentByKeyAsync("54aeb99f3e050031c5e207468a3955940b3a56e6");
+row.children[1].swapComponent(cellText);                 // position 1 becomes a text cell
+row.children[1].setProperties({ "Text#204:245": name });
+row.children[1].layoutSizingHorizontal = "FILL";
+```
+
+**Text cell vs small text cell — semantic, not cosmetic.** `table cell text` uses **`Body-2-Med`** (medium) → use it for the **most important column**, typically the label / first text column. `table cell - text small` uses **`Body-2`** (regular) → secondary columns. Don't mix them up: the label gets the medium cell.
 
 **Put a control into a cell:** the swap property does **not** accept a key or an instance id (both throw). Reach the cell's inner instance and use `swapComponent`:
 ```js
@@ -248,6 +255,11 @@ inner.swapComponent(selectSet.defaultVariant); // a COMPONENT, e.g. a variant of
 
 **Row fill — set it systematically** (rows are transparent by default, which renders wrong on dark canvases):
 - default `neutral/000` · **hover** `purple/200` · **selected** `purple/100`. Bind the fill, e.g. `row.fills = [figma.variables.setBoundVariableForPaint(figma.util.solidPaint("#fff"), "color", purple200Var)]`.
+
+**Row state details (apply together with the fill):**
+- **Selected → check the checkbox.** Set the inner checkbox instance to its selected variant: `cbCell.findOne(c=>c.type==="INSTANCE").setProperties({ States:"Selected" })`. A coloured fill without a checked box looks wrong.
+- **Hover → show the action-rail.** The `action-rail` inside `Table Row` is already `layoutPositioning: "ABSOLUTE"` (it overlays the row at the right). Just make it visible: `row.children.find(c=>c.name==="action-rail").visible = true`. Don't rebuild it.
+- **First data row → hide its top border.** Each cell carries a top separator via `strokeTopWeight: 1`. On the first row *after the header*, zero it on every cell: `for (const cell of firstRow.children) if (cell.name.includes("cell")) cell.strokeTopWeight = 0;`
 
 **Widths:** cells default to 192px fixed — set `layoutSizingHorizontal="FILL"` on the column(s) that should stretch.
 
@@ -317,6 +329,10 @@ inner.swapComponent(selectSet.defaultVariant); // a COMPONENT, e.g. a variant of
 - **States logic:** `Empty` / `Empty Hovered` = no value yet — in these states the card carries an **action button** (e.g. "+ Ajouter"), which is part of the component. Once filled, use `Enabled` (`Hovered` for the clickable hover); the action button is no longer shown.
 - **Layout:** typically a row / grid of cards at the top of a dashboard, objectives, comparison or results screen.
 - **Pose:** `setProperties({ Styles:"Neutral", States:"Enabled", "Show description#3579:4":true })`
+
+### `cursor` — set · `47824c870de4f0fae612dd434baf92e3e807a2f5`
+- **Variants:** `Property 1` = mouse | pointer | text | zoom in | zoom out — the usual cursor shapes.
+- **When:** a **projection / mockup element** to depict a user's cursor in a screen (e.g. showing a hover or a collaborator's pointer). Use `pointer` over clickable elements. Not a UI control — it's illustrative.
 
 
 ## Recommended workflow for `use_figma`

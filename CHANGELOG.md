@@ -4,7 +4,11 @@ Suivi des évolutions du skill `aktio-design-system`.
 
 ## [Non publié]
 ### Ajouté
-- **Recette table complète** (validée en test) : skeleton vertical, en-tête de colonne toujours présent, top control bar uniquement en sélection (remplace l'en-tête), ordre des cellules non-réordonnable, `swapComponent` pour insérer un contrôle, fill de ligne systématique (neutral/000 · hover purple/200 · sélection purple/100), screenshot sur fond blanc.
+- **États de ligne de tableau** : ligne sélectionnée → checkbox cochée (`States:"Selected"`) ; ligne hover → action-rail affiché (déjà en position absolue, overlay) ; première ligne de données → contour haut masqué (`strokeTopWeight=0` sur ses cellules).
+- **Méthode swap-de-type-par-position** pour les tables : changer le type de chaque cellule (`swapComponent`) pour aligner les colonnes sur l'en-tête, plutôt que tenter de réordonner (impossible dans une instance).
+- Règle **cell text (Body-2-Med, colonne libellé principale) vs cell text small (Body-2, colonnes secondaires)**.
+- Fiche `cursor` (élément de projection : mouse / pointer / text / zoom).
+- **Recette table complète** (validée en test) : skeleton vertical, en-tête de colonne toujours présent, top control bar uniquement en sélection (remplace l'en-tête), `swapComponent` pour insérer un contrôle, fill de ligne systématique (neutral/000 · hover purple/200 · sélection purple/100), screenshot sur fond blanc.
 - **Étape 0 bloquante** : si la librairie n'est pas liée, mettre en pause et demander à l'utilisateur de l'ajouter (ou de confirmer continuer sans).
 - **Prérequis** : avertir l'utilisateur d'activer la librairie `Aktio - Design System (C14)`.
 - Section **Layout rules** (radius cards 24px, rythme spacing 16/8px, padding main container 40px, header bar + top nav bar obligatoires, usage du vrai composant drawer).
