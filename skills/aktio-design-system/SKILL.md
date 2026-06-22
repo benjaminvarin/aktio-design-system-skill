@@ -17,7 +17,10 @@ Reference for generating Aktio product UI in Figma via the MCP `use_figma` / `se
 Before generating anything, the **`Aktio - Design System (C14)` library must be enabled in the target Figma file** (Assets panel → library icon → toggle it on). This makes its components **and its variables/tokens** available locally.
 
 - **Tell the user up front.** Whenever asked to create mockups or use this design system, first remind them: *"Make sure the `Aktio - Design System (C14)` library is added/enabled in this file, otherwise tokens and components may be missing."*
-- **The agent should verify, not assume.** Run `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()` early. If it returns empty, the variable library is likely not enabled — surface this to the user instead of silently working around it. (A fallback exists — harvesting token IDs from imported components' bindings, see workflow step 4 — but it's a workaround, not a substitute for enabling the library.)
+- **The agent should verify, then PAUSE.** Run `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()` early. If it returns empty, the variable library is not enabled — **stop the process and ask the user to act** before doing any work:
+  > *"La librairie `Aktio - Design System (C14)` ne semble pas liée à ce fichier. Ajoute-la (panneau Assets → icône librairie) pour de meilleurs résultats, puis confirme. Veux-tu (a) que j'attende que tu l'aies ajoutée, ou (b) continuer sans (rendu dégradé, tokens approximés) ?"*
+  
+  Do **not** silently fall back to the harvesting workaround without the user's explicit choice. Only proceed once the user confirms they added it, or explicitly asks to continue without. (The fallback — harvesting token IDs from imported components' bindings, see workflow step 4 — is then used only with consent.)
 
 ## Golden rules
 
@@ -225,8 +228,33 @@ Each guide lists the real variant/content properties (extracted from the source 
 - **Pose:** `setProperties({ States:"unselected" })`
 
 ### Table system — assembled, not a single component
-- **Skeleton:** `[NEW] top control bar` (`c3a406…`) on top → header `Table Tilte Row` (`12d6c3…`) built from `table column title` (+ `table - column checkbox` if selectable) → rows `Table Row` (`0f78d2…`) built from cells (`table cell text`, `table cell - element`, `table cell - checkbox`…) → `table footer` (`599e2f…`) for pagination. Container `table` / `table-with-heading` wraps it. When a raw is hovered, you can display, at the right-hand 8px margin right, an `action-rail`, this action rail is used for quick actions (edit, duplicate, delete…).
-- **When:** Use to display information or list in table · add the checkbox column whenever multi-select / bulk actions exist. · If information to display are few, you can use a `Stacked-list`made of `Stacked-list-item`.
+Don't use the figured `table` instance (renders broken). Build a **vertical skeleton frame** and stack the parts. Recipe validated live:
+
+**Structure (top to bottom):**
+1. **Header row — always present:** `Table Tilte Row` (`12d6c39a5c4db345f97b935f67e641ab07bf71ac`), built from `table column title` cells (+ `table - column checkbox` as the first cell if rows are selectable). There is *always* a column-header row.
+2. **Data rows:** N× `Table Row` (`0f78d2c4350f36af70cf587887d42f008580e439`).
+3. **Footer:** `table footer` (`599e2f59525efbb09f89364bf396497d719fa880`) — pagination ("1 - 20 sur 128").
+
+**Selection & top control bar:** `[NEW] top control bar` (`c3a406…`) is shown **only when one or more rows are selected**, and it **replaces the header row** for that state. Selection is only possible if row checkboxes are shown — so: checkboxes off → no selection → header row stays; checkboxes on + selection → header row swapped for the top control bar.
+
+**Inside a `Table Row` (cells are in a fixed, NON-reorderable order — they live in an instance):**
+`table cell - checkbox` (always first; hide it if no batch action on the page) → then content cells in their native order: `table cell - element` (for a control: Select, button, chips…) and `table cell text` / `table cell - text small` (for text) → `action-rail` (always last; hidden by default, appears on row hover at the right-hand 8px margin, holds the row's quick actions: edit, duplicate, delete…). You cannot move cells (`insertChild` fails inside an instance) — map your columns to the native order, name the header titles to match.
+
+**Put a control into a cell:** the swap property does **not** accept a key or an instance id (both throw). Reach the cell's inner instance and use `swapComponent`:
+```js
+const inner = cellElement.children.find(c => c.type === "INSTANCE");
+inner.swapComponent(selectSet.defaultVariant); // a COMPONENT, e.g. a variant of the Select set
+```
+
+**Row fill — set it systematically** (rows are transparent by default, which renders wrong on dark canvases):
+- default `neutral/000` · **hover** `purple/200` · **selected** `purple/100`. Bind the fill, e.g. `row.fills = [figma.variables.setBoundVariableForPaint(figma.util.solidPaint("#fff"), "color", purple200Var)]`.
+
+**Widths:** cells default to 192px fixed — set `layoutSizingHorizontal="FILL"` on the column(s) that should stretch.
+
+**Always screenshot on a white-filled frame** to check (a transparent test frame shows the dark canvas through the rows and looks broken).
+
+- **When:** display information or a list in a table · add the checkbox column whenever multi-select / bulk actions exist · if there are few items, use a `Stacked-List` of `Stacked-list-item` instead.
+- ⚠️ **Note:** `table cell - element` historically embedded a `[Deprecated] Pills` as its default inner instance — always `swapComponent` it to the intended control; never leave the default.
 
 ### `drawer` — component · `71f17e78ee18b1316ed9829f09f2acb9cf169180`
 - **Props:** `Title#3933:0` (text) · `content#8555:2` (SLOT to fill)
@@ -293,7 +321,7 @@ Each guide lists the real variant/content properties (extracted from the source 
 
 ## Recommended workflow for `use_figma`
 
-0. **Check the library is enabled.** Call `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()`. If empty, warn the user that `Aktio - Design System (C14)` may not be added to the file (tokens/components could be missing) before proceeding.
+0. **Check the library is enabled — and pause if not.** Call `figma.teamLibrary.getAvailableLibraryVariableCollectionsAsync()`. If empty, **stop and ask the user** to add `Aktio - Design System (C14)` to the file, then wait for them to confirm they've added it or to explicitly choose to continue without. Don't start building until they answer.
 1. **Resolve the component** — `search_design_system(fileKey, query, includeLibraryKeys: [<active key>])` with a 1-word query. Confirm `libraryName === "Aktio - Design System (C14)"`.
 2. **Import** — `const set = await figma.importComponentSetByKeyAsync(key)` (or `importComponentByKeyAsync`). For sets, `set.defaultVariant` or find the variant via `componentPropertyDefinitions`.
 3. **Instantiate** — `const inst = component.createInstance()`; set variant props with `inst.setProperties({...})`.
