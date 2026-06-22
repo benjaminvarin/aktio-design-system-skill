@@ -1,6 +1,6 @@
 ---
 name: aktio-design-system
-description: Generate and edit Aktio designs in Figma using the official "Aktio — Design System (C14)" library. Use whenever building screens, mockups, or prototypes in the Aktio Figma file (key EjuZtLgmnmge6ZlxamyKK9) via the Figma MCP — to apply the correct tokens (colors, typography, spacing, radius, shadows) and to import components by their verified keys instead of recreating them or hardcoding values.
+description: Generate, edit, or prototype Aktio product UI in Figma using the official "Aktio — Design System (C14)" library via the Figma MCP. Use this skill whenever the user asks to create, redesign, mock up, or prototype any Aktio screen, page, component, table, form, drawer, modal, or layout in Figma — even if they don't name the design system explicitly. It provides the verified component keys, design tokens (colors, typography, spacing, radius, shadows), per-component usage rules, mandatory layout rules, and the exact Figma-MCP workflow, so screens are built by importing real components and binding real tokens instead of recreating or hardcoding them. Trigger it for any Aktio Figma design task, and before building check that the library is enabled in the file.
 ---
 
 # Aktio — Design System (C14)
