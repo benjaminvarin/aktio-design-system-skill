@@ -4,6 +4,7 @@ Suivi des évolutions du skill `aktio-design-system`.
 
 ## [Non publié]
 ### Ajouté
+- Fiche d'usage : `Value Card` (carte de chiffre clé cliquable, bouton d'action en état Empty, chip de variation / tag / sélection).
 - Fiches d'usage : `lightbox`, `block`, `Stacked-List` (skeleton), `action-rail`.
 - Comportement détaillé du `drawer` (ancrage, offset 8px, masque 30%, header fixed, animation).
 - Masque de fond (`neutral/900` @ 30%) sur `modal` et `drawer`.

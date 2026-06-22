@@ -261,6 +261,15 @@ Each guide lists the real variant/content properties (extracted from the source 
 - **Variants:** `Style` = Outlined | Transparent (def. Outlined). Built from `icon-button` instances in an inline row.
 - **When:** inline row of icon-buttons shown **only on hover** of an element — mainly a table row (at the right-hand 8px margin), also a `Stacked-list-item`. For quick actions (edit, duplicate, delete…). Use the `three-dots-vertical` icon to open a dropdown `Menu` with more options.
 
+### `Value Card` — set · `80ef843e981cc469de7ffc5b335ba5ede7cb7474`
+*(Named "Value Card" in the DS, but it's really a clickable key-figure card.)*
+- **Variants:** `Styles` = Neutral | Light | Primary (def. Neutral) · `States` = Empty | Empty Hovered | Enabled | Hovered | Read-only (def. Empty)
+- **Content:** `Titre#3579:8` (text) · `Description#3579:12` (text) · `Show description#3579:4` (bool, def. true) · `icon#3576:1` (instance swap) · embeds a `[New] chips` whose role varies: a **numeric variation** (e.g. +12 %), a **tag**, or a **selectable chip** to pick an option.
+- **When:** display a key figure, with optional description / extra info. Cards are **clickable**. `Primary` highlights the screen's main figure, `Neutral`/`Light` for secondary values. `Read-only` for a non-interactive metric.
+- **States logic:** `Empty` / `Empty Hovered` = no value yet — in these states the card carries an **action button** (e.g. "+ Ajouter"), which is part of the component. Once filled, use `Enabled` (`Hovered` for the clickable hover); the action button is no longer shown.
+- **Layout:** typically a row / grid of cards at the top of a dashboard, objectives, comparison or results screen.
+- **Pose:** `setProperties({ Styles:"Neutral", States:"Enabled", "Show description#3579:4":true })`
+
 
 ## Recommended workflow for `use_figma`
 
