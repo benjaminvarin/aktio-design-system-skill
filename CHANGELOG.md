@@ -4,7 +4,8 @@ Suivi des évolutions du skill `aktio-design-system`.
 
 ## [Non publié]
 ### Ajouté
-- **États de ligne de tableau** : ligne sélectionnée → checkbox cochée (`States:"Selected"`) ; ligne hover → action-rail affiché (déjà en position absolue, overlay) ; première ligne de données → contour haut masqué (`strokeTopWeight=0` sur ses cellules).
+- **Styles de texte obligatoires** (golden rule 7) : appliquer un style DS (`Heading/`, `Body/`, `Display/`, `Label/`) via `setTextStyleIdAsync`, jamais de fontSize/fontName en dur. Méthode de récolte des IDs de style depuis les composants documentée.
+- **États de ligne de tableau** : ligne sélectionnée → checkbox cochée ; ligne hover → action-rail affiché (overlay) ; première ligne → contour haut masqué.
 - **Méthode swap-de-type-par-position** pour les tables : changer le type de chaque cellule (`swapComponent`) pour aligner les colonnes sur l'en-tête, plutôt que tenter de réordonner (impossible dans une instance).
 - Règle **cell text (Body-2-Med, colonne libellé principale) vs cell text small (Body-2, colonnes secondaires)**.
 - Fiche `cursor` (élément de projection : mouse / pointer / text / zoom).

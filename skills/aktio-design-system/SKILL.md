@@ -30,7 +30,8 @@ Before generating anything, the **`Aktio - Design System (C14)` library must be 
 4. **Avoid deprecated / legacy.** Skip any name containing `[Deprecated]`, `[deprecated]`, or the legacy `Aktio - Font/…` and `Color (à déplacer)/…` token groups. Prefer `[New]` / `[NEW]` variants.
 5. **Search queries must be short.** One or two words ("chip", "drawer", "table"). Long multi-word queries return empty.
 6. **Use literal property names.** Variant values are **PascalCase** (`Filled`, `Enabled`, `Danger`) — not lowercase, despite what library descriptions suggest. Content properties carry a `#id` suffix (e.g. `Label#4736:2`, `Title#3933:0`). Pass these exact strings to `setProperties`; a reformatted name silently no-ops. Exception: `Toggle` uses lowercase variant values (`selected`, `unselected`).
-7. **Overlay hierarchy.** Pick the least intrusive surface that fits: toaster (transient confirmation) < information message (inline, persistent) < drawer (edit one item, keeps context) < modal (blocking decision). Never use a modal for routine feedback.
+7. **Apply DS text styles — never hardcode font size/weight.** Every text node must use a design-system text style (`Heading/…`, `Body/…`, `Display/…`, `Label/…`), applied via `setTextStyleIdAsync`. Do **not** set `fontSize` / `fontName` manually — that produces off-spec type. See the Typography section for how to resolve the style IDs.
+8. **Overlay hierarchy.** Pick the least intrusive surface that fits: toaster (transient confirmation) < information message (inline, persistent) < drawer (edit one item, keeps context) < modal (blocking decision). Never use a modal for routine feedback.
 
 ## Layout rules (always apply)
 
@@ -93,6 +94,22 @@ Canonical scale is the `Display / Heading / Body / Label` groups (all Inter). Ig
 | `Label/Label-1` | Regular | 12 / 16 / 3 |
 | `Label/Label-1-Med` | Medium | 12 / 16 / 3 |
 | `Label/Label-2` | Regular | 8 / 12 / 3 |
+
+**Apply these as text styles, never as manual font size/weight.** Text styles are objects (not variables) and aren't listed by `teamLibrary`. Resolve their IDs by **harvesting from text nodes inside imported components**, then apply with `setTextStyleIdAsync` (it loads the right font automatically):
+```js
+// Harvest: instantiate text-bearing components and read their textStyleId
+const styleIds = {}; // { "Body/Body-2-Med": "S:abc…", ... }
+async function harvestStyles(inst){
+  for (const n of [...inst.findAll(()=>true), inst]) {
+    if (n.type==="TEXT" && typeof n.textStyleId==="string" && n.textStyleId) {
+      const s = await figma.getStyleByIdAsync(n.textStyleId); if (s) styleIds[s.name] = n.textStyleId;
+    }
+  }
+}
+// e.g. harvest from button, table cell text, column title, chips, headings… (more components = more styles covered)
+await myTextNode.setTextStyleIdAsync(styleIds["Heading/Heading-2"]);
+```
+Harvest from as many varied components as needed to cover the scale you use. If a needed style isn't surfaced by any component you instantiated, instantiate one that uses it (or a `Heading` sample frame) to capture it.
 
 ### Spacing
 
@@ -369,7 +386,7 @@ inner.swapComponent(selectSet.defaultVariant); // a COMPONENT, e.g. a variant of
    ```
    Harvest from varied components (chips of each Style, buttons, block) to cover more tokens. Same approach for `itemSpacing`/`padding…`, `cornerRadius`, effects.
 5. **Auto-layout** — set `layoutMode`, and use `layoutSizingHorizontal/Vertical` = `"FILL"` / `"HUG"` / `"FIXED"` rather than manual width math. Use spacing tokens for `itemSpacing` and padding.
-6. **Type** — load fonts before setting text: `await figma.loadFontAsync({family:"Inter", style:"Semi Bold"})`. Map sizes/line-heights to the typography tokens above.
+6. **Type** — apply a DS **text style** to every text node via `setTextStyleIdAsync` (resolve IDs by harvesting from components — see Typography). Don't set `fontSize`/`fontName` by hand; the style carries size, weight and line-height. `setTextStyleIdAsync` loads the font for you.
 
 ## Common pitfalls (carried over from prior sessions + live tests)
 
