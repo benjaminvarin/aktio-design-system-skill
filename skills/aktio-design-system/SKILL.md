@@ -22,6 +22,25 @@ Before generating anything, the **`Aktio - Design System (C14)` library must be 
   
   Do **not** silently fall back to the harvesting workaround without the user's explicit choice. Only proceed once the user confirms they added it, or explicitly asks to continue without. (The fallback — harvesting token IDs from imported components' bindings, see workflow step 4 — is then used only with consent.)
 
+## File structure convention
+
+Aktio Figma working files follow a fixed page structure. When creating or organising a file, set up the pages in this order (use `---` as literal separator page names):
+
+```
+Cover           — cover page, contains only the cover component (`Thumbnail`)
+---
+{Design name}   — one or more pages where the actual designs are built (name after the topic; add more as needed: "{Design name} 2", etc.)
+---
+Benchmark       — collects and references design inspiration from other apps, sites, or our own platform, anything useful to the topic being solved
+Sandbox         — playground to test, compose, or archive the different design proposals
+```
+
+- **Build designs on the `{Design name}` page(s)**, not on Cover/Benchmark/Sandbox.
+- **Cover page** uses the `Thumbnail` component (`96e5a29ceb871431d710b800a6c6db4b0655b769`) and nothing else.
+- **Page background must be `#1E1E1E`** for every page.
+- The `Aktio - Design System (C14)` library must be linked (see Prerequisite above).
+- To set a page background via the API: `page.backgrounds = [figma.util.solidPaint("#1E1E1E")]`.
+
 ## Golden rules
 
 1. **Never hardcode a value that exists as a variable.** Bind fills, strokes, spacing, radius, and effects to the variables below. Use `setBoundVariable` / `setRangeBoundVariableForPaint` rather than raw hex/numbers.

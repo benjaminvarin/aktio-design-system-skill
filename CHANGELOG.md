@@ -4,6 +4,7 @@ Suivi des évolutions du skill `aktio-design-system`.
 
 ## [Non publié]
 ### Ajouté
+- **Convention de structure des fichiers Figma** : pages Cover (composant `Thumbnail`) / {Nom du design}+n / Benchmark / Sandbox (séparateurs `---`), fond de page `#1E1E1E`, librairie C14 liée.
 - **Styles de texte obligatoires** (golden rule 7) : appliquer un style DS (`Heading/`, `Body/`, `Display/`, `Label/`) via `setTextStyleIdAsync`, jamais de fontSize/fontName en dur. Méthode de récolte des IDs de style depuis les composants documentée.
 - **États de ligne de tableau** : ligne sélectionnée → checkbox cochée ; ligne hover → action-rail affiché (overlay) ; première ligne → contour haut masqué.
 - **Méthode swap-de-type-par-position** pour les tables : changer le type de chaque cellule (`swapComponent`) pour aligner les colonnes sur l'en-tête, plutôt que tenter de réordonner (impossible dans une instance).
